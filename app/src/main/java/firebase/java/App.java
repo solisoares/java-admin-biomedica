@@ -3,7 +3,6 @@ package firebase.java;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import com.google.api.core.ApiFuture;
@@ -15,6 +14,7 @@ import com.google.firebase.database.*;
 public class App {
     private static String ADMIN_SDK = "/home/alexandresoares/Desktop/firebase-java/adminsdk.json";
     private static String DATABASE_URL = "https://myffbproject-default-rtdb.firebaseio.com/";
+    private static DatabaseReference ref;
 
     private static void setup() {
         // Fetch the service account key JSON file contents
@@ -39,14 +39,8 @@ public class App {
         }
     }
 
-    private static DatabaseReference getRef(String path) {
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
-        return ref;
-    }
-
     public static void pushTag(String tagId, Tag tag) {
-        DatabaseReference ref = getRef(tagId);
-        ApiFuture<Void> future = ref.setValueAsync(tag);
+        ApiFuture<Void> future = ref.child(tagId).setValueAsync(tag);
         try {
             future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -55,28 +49,23 @@ public class App {
     }
 
     public static void getTag(String tagId) {
-        // TODO this does not work
-        // DatabaseReference ref = getRef(tagId);
-        // ref.child(tagId).addListenerForSingleValueEvent(new ValueEventListener() {
-        // @Override
-        // public void onDataChange(@NonNull DataSnapshot snapshot) {
-        // User userProfile=snapshot.getValue(User.class);
-        // if(userProfile!=null)
-        // {
+        ref.child(tagId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Tag tag = dataSnapshot.getValue(Tag.class);
+                System.out.println("Retrieved tag: " + tag.name);
+            }
 
-        // if(userProfile.morning_List!=null)
-        // {
-        // for(int i=0;i<userProfile.morning_List.size();i++)
-        // {
-        // FoodItem foodItem=new FoodItem(userProfile.morning_List.get(i));
-        // mFoodList.add(new FoodItem(foodItem.getFoodName(),foodItem.getAmount()));
-        // }
-        // }
-        // }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("Error retrieving tag: " + databaseError.getMessage());
+            }
+        });
     }
 
     public static void main(String[] args) {
         setup();
+        ref = FirebaseDatabase.getInstance().getReference("/");
 
         // Push a tag to firebase
         pushTag("1", new Tag("Object 1"));
@@ -88,7 +77,7 @@ public class App {
 
         // Get a tag from firebase
         // Tag tag = getTag("1");
-        // getTag("1");
+
     }
 }
 
