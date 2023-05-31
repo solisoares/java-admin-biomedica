@@ -84,7 +84,15 @@ public class App {
 class Tag {
     public String name;
 
+    public Tag() {
+    }
+
     public Tag(String name) {
         this.name = name;
-    } // DatabaseReference ref = getRef(tagId);
+    }
+
+    public String getName() {
+        return name;
+    }
+
 }
